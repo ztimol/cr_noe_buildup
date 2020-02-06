@@ -6,20 +6,32 @@ import math
 def calc_theoretical_noe_intensity(mixing_time, lambda_one, lambda_two, r_i):
 
     iz_over_iz_zero = (
-        2
-        * math.sqrt(
-            (4 * ((lambda_one - lambda_two) ** 2))
-            / (
-                r_i ** 2
-                - 2 * r_i * (lambda_one + lambda_two - r_i)
-                + (lambda_one + lambda_two - r_i) ** 2
+        (
+            (
+                2
+                * math.sqrt(
+                    (
+                        ((lambda_one - lambda_two) ** 2)
+                        - (r_i ** 2)
+                        + (2 * r_i * (lambda_one + lambda_two - r_i))
+                        - ((lambda_one + lambda_two - r_i) ** 2)
+                    )
+                    / 4
+                )
             )
+            / (lambda_one - lambda_two)
         )
-    ) / (lambda_one - lambda_two)
+        * (math.exp(-lambda_two * mixing_time) - math.exp(-lambda_one * mixing_time))
+    ) + 1
 
     sz_over_iz_zero = (
-        ((2 * r_i - lambda_one - lambda_two) / (lambda_one - lambda_two))
-        * (math.exp(-lambda_one * mixing_time) - math.exp(-lambda_two * mixing_time))
+        (
+            (((2 * r_i) - lambda_one - lambda_two) / (lambda_one - lambda_two))
+            * (
+                math.exp(-lambda_one * mixing_time)
+                - math.exp(-lambda_two * mixing_time)
+            )
+        )
         + 1
         - math.exp(-lambda_one * mixing_time)
         + math.exp(-lambda_two * mixing_time)
@@ -96,13 +108,13 @@ def write_out_params(
 
 def fit_curve(measured_noe_intensity_per_mixing_time, out_file):
 
-    lambda_one_min = 0.0
-    lambda_two_min = 0.0
-    r_i_min = 0.0
+    lambda_one_min = 6.0
+    lambda_two_min = 3.5
+    r_i_min = 5.0
 
     lambda_one_max = 10.0
     lambda_two_max = 10.0
-    r_i_max = 10
+    r_i_max = 10.0
 
     mixing_times = measured_noe_intensity_per_mixing_time.keys()
     measured_noe_intensities = measured_noe_intensity_per_mixing_time.values()
@@ -110,7 +122,6 @@ def fit_curve(measured_noe_intensity_per_mixing_time, out_file):
     for lambda_one in np.arange(lambda_one_min, lambda_one_max, 0.1):
         for lambda_two in np.arange(lambda_two_min, lambda_two_max, 0.1):
             for r_i in np.arange(r_i_min, r_i_max, 0.1):
-
                 if (
                     lambda_two >= lambda_one
                     or lambda_one == 0.0
